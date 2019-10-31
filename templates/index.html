@@ -1,13 +1,13 @@
 <form method= "POST" action="/upload" enctype="multipart/form-data">
-    <select name=lojas>
-        {% for loja in loja %}
-            <option value="{{ loja.loja }}">{{ loja.loja }}</option>
-        {% endfor %}
+    <select name="loja_select">
+        <option value="{{ lojas.loja1 }}">{{ lojas.loja1 }}</option>
+        <option value="{{ lojas.loja2 }}">{{ lojas.loja2 }}</option>
+        <option value="{{ lojas.loja3 }}">{{ lojas.loja3 }}</option>
     </select>
-    <select name="spot">
-        {% for spot in spot %}
-            <option value="{{ spot.spot }}">{{ spot.spot }}</option>
-        {% endfor %}
+    <select name="spot_select">
+        <option value="{{ spots.spot1 }}">{{ spots.spot1 }}</option>
+        <option value="{{ spots.spot2 }}">{{ spots.spot2 }}</option>
+        <option value="{{ spots.spot3 }}">{{ spots.spot3 }}</option>
     </select>
     <input type="file" name="file">
     <input type="submit">

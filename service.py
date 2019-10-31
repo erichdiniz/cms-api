@@ -1,60 +1,100 @@
+import urllib
+
 from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
-from flask_pymongo import PyMongo
+from flask_pymongo import PyMongo, MongoClient
+from mongoengine import *
+
 
 app = Flask(__name__)
-
-
-app.debug = True
-app.secret_key = 'development key'
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/myDatabase'
 mongo = PyMongo(app)
 
-databases = {
-    'loja': mongo.cx['loja'],
-    'spot': mongo.cx['spot'],
-}
+# Connect to MongoDB instance running on localhost
+username1 = "admin"
+password = "password"
+host = "localhost"
 
-lojas = {
-    "loja": 'Marisa',
-    "loja": 'Extra',
-    "loja": 'Itaú'
-}
+client = MongoClient('localhost', 27017)
 
-spots = {
-    'spot': 'Logo',
-    'spot': 'Banner Home',
-    'spot': 'Banner Dashboard',
-}
-@app.route('/')
-def hello_world(loja, spot):
-    loja = loja
-    spot = spot
-    return render_template('index.html', lojas=loja, spots=spot)
+connString = client
+connection = MongoClient(connString)
+db = connection.query
 
+lojas = {'loja1': 'Marisa', 'loja2': 'Extra', 'loja3': 'Itaú'}
 
-@app.route("/<database>/foo1")
-def foo1(database):
-    db = databases[database]  # fetch the appropriate DB
-    # data = db.tar.find_one({'metadata.grid': {'$eq': '5000'}})
-    print(database)
-    return 'foo1 ' + database
+spots = {'spot1': 'Logo','spot2': 'Banner Home', 'spot3': 'Banner Dashboard'}
+
+# result_lojas = lojas_db.insert_one(lojas)
+# result_spot = spots_db.insert_one(spots)
+#
+
+dblist = db.list_database_names()
+if "query" in dblist:
+  print("The database exists.")
+
+@app.context_processor
+def inject_lojas_in_all_templates():
+    return dict(lojas=lojas)
 
 
-@app.route('/upload', methods=['POST'])
+@app.context_processor
+def inject_spots_in_all_templates():
+    return dict(spots=spots)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def hello_world():
+    if request.method == 'POST':
+        return 'uai'
+    else:
+        return render_template('index.html')
+
+
+@app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         f = request.files['file']
-        filename = secure_filename(f.filename)
-        mongo.save_file(f.filename, f)
-        mongo.db.users.insert({'f_name': f.filename})
-        print(mongo.db.users)
+        # filename = secure_filename(f.filename)
         print(f)
-        # f.save(secure_filename(f.filename))
-        return 'Tudo salvo meu parceirinho'
+        # select = request.form.get('comp_select')
+        # return (str(select))
+        f.save(secure_filename(f.filename))
 
+        file_selected = f.filename
+        loja_selected = request.form.get('loja_select')
+        spot_selected = request.form.get('spot_select')
 
-@app.route("/uploads/<path:filename>", methods=["POST"])
-def save_upload(filename):
-    mongo.save_file(filename, request.files["file"])
+               
+        result_query = {"file_selected": file_selected,
+                 'loja_selected': loja_selected,
+                 'spot_selected': spot_selected}
 
+        mongo.save_file(f.filename, f)
+        result = db.insert_one(result_query)
+        
+        print(result)
+
+        # args1 = request.args[file_selected]
+        # args2 = request.args[loja_selected]
+        # args3 = request.args[spot_selected]
+        # print(args1, args2, args3)
+        # print(mongo.db.users)
+
+        print(str(file_selected))
+        print(str(loja_selected))
+        print(str(spot_selected))
+
+        # return '''<h1>The Query String are...{}:{}:{}</h1>'''.format(args1, args2, args3)
+        return 'kkk'
+
+# @app.route("/uploads/<path:filename>", methods=["POST"])
+# def save_upload(filename):
+#     return mongo.save_file(filename, request.files["file"])
+
+if __name__ == '__main__':
+    app.run(debug=True)
+else:
+    app.config.update(
+        SERVER_NAME='snip.snip.com:80',
+        APPLICATION_ROOT='/',
+    )
